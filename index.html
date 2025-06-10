@@ -2,35 +2,218 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Generator Judul (Full JS)</title>
+  <title>Generator Judul</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="styles.css" rel="stylesheet">
+  <style>
+    body { padding: 2rem; }
+    .card { margin-bottom: 1.5rem; }
+  </style>
 </head>
-<body class="container py-4">
+<body>
   <h2 class="mb-4">🌟 Generator Judul</h2>
+
   <form id="mainForm">
     <div class="mb-3">
-      <label class="form-label">Produk:</label>
-      <select class="form-select" id="inputProduk"></select>
+      <label>Produk:</label>
+      <select class="form-select" id="produkSelect" onchange="onProdukChange()"></select>
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Series:</label>
-      <select class="form-select" id="inputSeries"></select>
+      <label>Series:</label>
+      <select class="form-select" id="seriesSelect"></select>
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Jumlah Kata Kunci Utama:</label>
-      <select class="form-select" id="inputJumlah"></select>
+      <label>Jumlah Kata Kunci Utama:</label>
+      <select class="form-select" id="jumlahMainSelect"></select>
     </div>
-    <div id="prioritasContainer"></div>
+
+    <div id="kategoriContainer"></div>
+
     <div class="mb-3">
-      <label class="form-label">Jumlah Judul:</label>
-      <input type="number" id="inputGenerateCount" class="form-control" value="5" min="1">
+      <label>Jumlah Judul:</label>
+      <input type="number" class="form-control" id="jumlahGenerate" value="5" min="1" />
     </div>
-    <button type="button" id="btnGenerate" class="btn btn-primary">Generate</button>
+
+    <button type="submit" class="btn btn-primary">Generate</button>
   </form>
 
-  <div id="hasilContainer" class="mt-4"></div>
+  <hr>
+  <div id="resultContainer"></div>
 
-  <script src="script.js" defer></script>
+<script>
+// DATA STATIS DISIMPAN DI SINI
+const data = {
+  config: {
+    max_keywords: 3,
+    max_char_title: 80,
+    allow_feature: true,
+  },
+  keywords: [
+    { media: "MPFB", produk: "ProdukA", series: "Series1", prioritas: 1, kategori: "Kategori1", keyword: "Kayu Elegan", is_main: true, is_feature: false },
+    { media: "MPFB", produk: "ProdukA", series: "Series1", prioritas: 2, kategori: "Kategori2", keyword: "Warna Natural", is_main: true, is_feature: false },
+    { media: "MPFB", produk: "ProdukA", series: "Series1", prioritas: 3, kategori: "Kategori3", keyword: "Tahan Lama", is_main: true, is_feature: false },
+    { media: "MPFB", produk: "ProdukA", series: "Series1", keyword: "Anti Rayap", is_main: false, is_feature: true },
+    // Tambahkan data lain sesuai kebutuhan
+  ],
+  deskripsi: {
+    Kategori1: {
+      Deskripsi: "Cocok untuk interior elegan dengan tampilan alami.",
+      DeskripsiRobot: "Solusi terbaik untuk gaya natural."
+    }
+  }
+};
+
+function populateProduk() {
+  const produkSet = [...new Set(data.keywords.map(k => k.produk))];
+  const produkSelect = document.getElementById("produkSelect");
+  produkSet.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = p;
+    produkSelect.appendChild(opt);
+  });
+}
+
+function onProdukChange() {
+  const produk = document.getElementById("produkSelect").value;
+  const seriesSet = [...new Set(data.keywords.filter(k => k.produk === produk && k.series).map(k => k.series))];
+  const seriesSelect = document.getElementById("seriesSelect");
+  seriesSelect.innerHTML = `<option value="">-- Default --</option>`;
+  seriesSet.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    seriesSelect.appendChild(opt);
+  });
+  populateJumlahMain();
+}
+
+function populateJumlahMain() {
+  const max = data.config.max_keywords;
+  const select = document.getElementById("jumlahMainSelect");
+  select.innerHTML = "";
+  for (let i = 1; i <= max; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i;
+    select.appendChild(opt);
+  }
+  updateKategoriSelects();
+}
+
+function updateKategoriSelects() {
+  const container = document.getElementById("kategoriContainer");
+  container.innerHTML = "";
+  const jumlah = parseInt(document.getElementById("jumlahMainSelect").value);
+  const produk = document.getElementById("produkSelect").value;
+  const series = document.getElementById("seriesSelect").value;
+
+  for (let p = 1; p <= jumlah; p++) {
+    const div = document.createElement("div");
+    div.className = "mb-3";
+    const label = document.createElement("label");
+    label.textContent = `Kategori Prioritas ${p}:`;
+    const select = document.createElement("select");
+    select.className = "form-select";
+    select.id = `kategori_p${p}`;
+    const kategoriSet = [...new Set(data.keywords
+      .filter(k => k.produk === produk && k.series === series && k.prioritas === p)
+      .map(k => k.kategori))];
+    kategoriSet.forEach(k => {
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = k;
+      select.appendChild(opt);
+    });
+    div.appendChild(label);
+    div.appendChild(select);
+    container.appendChild(div);
+  }
+}
+
+document.getElementById("jumlahMainSelect").addEventListener("change", updateKategoriSelects);
+
+document.getElementById("mainForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  generateJudul();
+});
+
+function generateJudul() {
+  const jumlahGenerate = parseInt(document.getElementById("jumlahGenerate").value);
+  const jumlahMain = parseInt(document.getElementById("jumlahMainSelect").value);
+  const produk = document.getElementById("produkSelect").value;
+  const series = document.getElementById("seriesSelect").value;
+  const maxChar = data.config.max_char_title;
+  const allowFeature = data.config.allow_feature;
+
+  const result = [];
+
+  for (let i = 0; i < jumlahGenerate; i++) {
+    const mainKata = [];
+    for (let p = 1; p <= jumlahMain; p++) {
+      const kategori = document.getElementById(`kategori_p${p}`).value;
+      const filtered = data.keywords.filter(k =>
+        k.produk === produk &&
+        k.series === series &&
+        k.prioritas === p &&
+        k.kategori === kategori &&
+        k.is_main
+      );
+      if (filtered.length > 0) {
+        mainKata.push(filtered[Math.floor(Math.random() * filtered.length)].keyword);
+      }
+    }
+
+    let judul = mainKata.join(", ");
+    let totalLen = judul.length;
+
+    if (allowFeature) {
+      const featureWords = data.keywords.filter(k => k.produk === produk && k.series === series && k.is_feature);
+      for (const f of featureWords) {
+        if (totalLen + f.keyword.length + 1 <= maxChar) {
+          judul += " " + f.keyword;
+          totalLen += f.keyword.length + 1;
+        }
+      }
+    }
+
+    result.push(judul);
+  }
+
+  showResults(result);
+}
+
+function showResults(list) {
+  const container = document.getElementById("resultContainer");
+  container.innerHTML = "";
+  list.forEach((judul, idx) => {
+    const kata_dari_judul = judul.split(",").slice(0, 3);
+    const tag_awal = kata_dari_judul.map(k => k.trim().replace(/ /g, "").toLowerCase());
+    const allKeywords = [...new Set(data.keywords.map(k => k.keyword.replace(/ /g, "").toLowerCase()))];
+    const sisa = allKeywords.filter(k => !tag_awal.includes(k));
+    const tag_akhir = [...tag_awal, ...sisa.sort(() => 0.5 - Math.random()).slice(0, 16)];
+
+    const deskripsi = data.deskripsi.Kategori1?.Deskripsi || "Deskripsi tidak ditemukan";
+
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <div class="card-body">
+        <h5 class="card-title">Judul ${idx + 1}</h5>
+        <p><strong>${judul}</strong></p>
+        <p>${deskripsi}</p>
+        <p><strong>Tags:</strong> ${tag_akhir.join(", ")}</p>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+window.onload = () => {
+  populateProduk();
+  onProdukChange();
+};
+</script>
 </body>
 </html>
