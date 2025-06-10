@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Generator Judul (Full JS)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="./styles.css" rel="stylesheet">
+</head>
+<body class="container py-4">
+  <h2 class="mb-4">🌟 Generator Judul</h2>
+  <form id="mainForm">
+    <div class="mb-3">
+      <label class="form-label">Produk:</label>
+      <select class="form-select" id="inputProduk"></select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Series:</label>
+      <select class="form-select" id="inputSeries"></select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Jumlah Kata Kunci Utama:</label>
+      <select class="form-select" id="inputJumlah"></select>
+    </div>
+    <div id="prioritasContainer"></div>
+    <div class="mb-3">
+      <label class="form-label">Jumlah Judul:</label>
+      <input type="number" id="inputGenerateCount" class="form-control" value="5" min="1">
+    </div>
+    <button type="button" id="btnGenerate" class="btn btn-primary">Generate</button>
+  </form>
+
+  <div id="hasilContainer" class="mt-4"></div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
